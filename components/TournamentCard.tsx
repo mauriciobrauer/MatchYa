@@ -1,13 +1,23 @@
+'use client';
+
 import Link from 'next/link';
 import { Tournament } from '@/lib/db';
+import { trackEvent } from '@/lib/analytics';
 
 interface TournamentCardProps {
   tournament: Tournament;
 }
 
 export default function TournamentCard({ tournament }: TournamentCardProps) {
+  const handleClick = () => {
+    trackEvent('tournament_click', {
+      tournament_id: tournament.id,
+      tournament_name: tournament.name,
+    });
+  };
+
   return (
-    <Link href={`/tournament/${tournament.id}`}>
+    <Link href={`/tournament/${tournament.id}`} onClick={handleClick}>
       <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1 min-w-0">

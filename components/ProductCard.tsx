@@ -1,12 +1,23 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { Product } from '@/lib/db';
+import { trackEvent } from '@/lib/analytics';
 
 interface ProductCardProps {
   product: Product;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
+  const handleClick = () => {
+    trackEvent('product_click', {
+      product_id: product.id,
+      product_name: product.name,
+      has_link: product.link ? 'true' : 'false',
+    });
+  };
+
   const cardContent = (
     <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer h-full flex flex-col">
       {product.imageUrl && (
@@ -40,6 +51,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         target="_blank"
         rel="noopener noreferrer"
         className="block h-full"
+        onClick={handleClick}
       >
         {cardContent}
       </Link>
@@ -47,5 +59,5 @@ export default function ProductCard({ product }: ProductCardProps) {
   }
 
   // Si no tiene link, solo mostrar el contenido
-  return cardContent;
+  return <div onClick={handleClick}>{cardContent}</div>;
 }

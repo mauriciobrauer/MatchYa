@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
+import { trackEvent } from '@/lib/analytics';
 
 export default function AdminLogin() {
   const [password, setPassword] = useState('');
@@ -26,9 +27,11 @@ export default function AdminLogin() {
     if (password === 'dualmeet') {
       // Guardar autenticación en sessionStorage
       sessionStorage.setItem('adminAuthenticated', 'true');
+      trackEvent('admin_login', { success: true });
       router.push('/admin');
     } else {
       setError('Contraseña incorrecta');
+      trackEvent('admin_login', { success: false });
       setIsLoading(false);
     }
   };

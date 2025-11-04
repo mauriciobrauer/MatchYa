@@ -7,6 +7,7 @@ import ProductCard from '@/components/ProductCard';
 import { Match } from '@/lib/db';
 import { Tournament } from '@/lib/db';
 import { Product } from '@/lib/db';
+import { trackEvent } from '@/lib/analytics';
 
 interface TournamentPageProps {
   params: {
@@ -227,7 +228,10 @@ export default function TournamentPage({ params }: TournamentPageProps) {
         <div className="mb-4 sm:mb-6">
           <div className="flex justify-center gap-2 sm:gap-4 border-b border-gray-200">
             <button
-              onClick={() => setActiveMainTab('partidos')}
+              onClick={() => {
+                setActiveMainTab('partidos');
+                trackEvent('tab_switch', { tab: 'partidos', tournament_id: tournament?.id || '' });
+              }}
               className={`px-6 sm:px-8 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${
                 activeMainTab === 'partidos'
                   ? 'border-black text-gray-900'
@@ -251,7 +255,10 @@ export default function TournamentPage({ params }: TournamentPageProps) {
             </button>
             {products.length > 0 && (
               <button
-                onClick={() => setActiveMainTab('productos')}
+                onClick={() => {
+                  setActiveMainTab('productos');
+                  trackEvent('tab_switch', { tab: 'productos', tournament_id: tournament?.id || '' });
+                }}
                 className={`px-6 sm:px-8 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${
                   activeMainTab === 'productos'
                     ? 'border-black text-gray-900'
@@ -373,6 +380,7 @@ export default function TournamentPage({ params }: TournamentPageProps) {
                     onClick={() => {
                       setActiveDateTab('Nov 9');
                       setActiveMatchTypeTab('proximos');
+                      trackEvent('date_tab_switch', { date: 'Nov 9', tournament_id: tournament?.id || '' });
                     }}
                     className={`px-4 sm:px-6 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap text-sm sm:text-base ${
                       activeDateTab === 'Nov 9'
@@ -386,6 +394,7 @@ export default function TournamentPage({ params }: TournamentPageProps) {
                     onClick={() => {
                       setActiveDateTab('Nov 10');
                       setActiveMatchTypeTab('proximos');
+                      trackEvent('date_tab_switch', { date: 'Nov 10', tournament_id: tournament?.id || '' });
                     }}
                     className={`px-4 sm:px-6 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap text-sm sm:text-base ${
                       activeDateTab === 'Nov 10'
@@ -403,7 +412,10 @@ export default function TournamentPage({ params }: TournamentPageProps) {
             <div className="mb-4 sm:mb-6">
               <div className="flex justify-center gap-2 sm:gap-4 border-b border-gray-200">
                 <button
-                  onClick={() => setActiveMatchTypeTab('proximos')}
+                  onClick={() => {
+                    setActiveMatchTypeTab('proximos');
+                    trackEvent('match_type_tab_switch', { type: 'proximos', date: activeDateTab, tournament_id: tournament?.id || '' });
+                  }}
                   className={`px-4 sm:px-6 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${
                     activeMatchTypeTab === 'proximos'
                       ? 'border-black text-gray-900'
@@ -427,7 +439,10 @@ export default function TournamentPage({ params }: TournamentPageProps) {
                   <span className="xs:hidden">Próximos</span>
                 </button>
                 <button
-                  onClick={() => setActiveMatchTypeTab('finalizados')}
+                  onClick={() => {
+                    setActiveMatchTypeTab('finalizados');
+                    trackEvent('match_type_tab_switch', { type: 'finalizados', date: activeDateTab, tournament_id: tournament?.id || '' });
+                  }}
                   className={`px-4 sm:px-6 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${
                     activeMatchTypeTab === 'finalizados'
                       ? 'border-black text-gray-900'
