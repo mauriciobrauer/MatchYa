@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ocultar scrollbar pero mantener funcionalidad de scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE y Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari y Opera */
+}
+
+/* Breakpoint personalizado para pantallas muy pequeñas */
+@media (min-width: 475px) {
+  .xs\:inline {
+    display: inline;
+  }
+  
+  .xs\:hidden {
+    display: none;
+  }
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #ffffff;
+    --foreground: #1a1a1a;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
