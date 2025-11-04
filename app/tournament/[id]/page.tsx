@@ -15,7 +15,8 @@ interface TournamentPageProps {
 }
 
 export default function TournamentPage({ params }: TournamentPageProps) {
-  const [activeDateTab, setActiveDateTab] = useState<string>('nov-9');
+  const [activeMainTab, setActiveMainTab] = useState<'partidos' | 'productos'>('partidos');
+  const [activeDateTab, setActiveDateTab] = useState<string>('Nov 9');
   const [activeMatchTypeTab, setActiveMatchTypeTab] = useState<'proximos' | 'finalizados'>('proximos');
   const [matches, setMatches] = useState<Match[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -49,44 +50,39 @@ export default function TournamentPage({ params }: TournamentPageProps) {
     fetchData();
   }, [params.id]);
 
-  // Organizar partidos por fecha y estado
-  const matchesByDate = useMemo(() => {
+  // Agrupar partidos por fecha y estado
+  const matchesByDateAndStatus = useMemo(() => {
     const grouped: Record<string, { pendientes: Match[]; finalizados: Match[] }> = {
-      'nov-9': { pendientes: [], finalizados: [] },
-      'nov-10': { pendientes: [], finalizados: [] },
+      'Nov 9': { pendientes: [], finalizados: [] },
+      'Nov 10': { pendientes: [], finalizados: [] },
     };
-
+    
     matches.forEach(match => {
-      const isFinalizado = match.status === 'finalizado';
-      const matchDate = match.date || '';
-      
-      // Agregar a Nov 9 o Nov 10 según la fecha
-      if (matchDate.includes('9 nov') || matchDate === '9 nov') {
-        if (isFinalizado) {
-          grouped['nov-9'].finalizados.push(match);
-        } else {
-          grouped['nov-9'].pendientes.push(match);
-        }
-      } else if (matchDate.includes('10 nov') || matchDate === '10 nov') {
-        if (isFinalizado) {
-          grouped['nov-10'].finalizados.push(match);
-        } else {
-          grouped['nov-10'].pendientes.push(match);
-        }
-      } else {
-        // Si no coincide con ninguna fecha específica, agregar a nov-9 por defecto
-        if (isFinalizado) {
-          grouped['nov-9'].finalizados.push(match);
-        } else {
-          grouped['nov-9'].pendientes.push(match);
-        }
+      const dateKey = match.rawDate || match.date;
+      // Determinar la fecha
+      let normalizedDate = 'Nov 9';
+      if (dateKey.includes('10') || dateKey.toLowerCase().includes('nov-10') || dateKey.includes('2025-11-10')) {
+        normalizedDate = 'Nov 10';
       }
+      
+      if (match.status === 'pendiente') {
+        grouped[normalizedDate].pendientes.push(match);
+      } else {
+        grouped[normalizedDate].finalizados.push(match);
+      }
+    });
+
+    // Ordenar por hora
+    Object.keys(grouped).forEach(date => {
+      grouped[date].pendientes.sort((a, b) => a.time.localeCompare(b.time));
+      grouped[date].finalizados.sort((a, b) => b.time.localeCompare(a.time));
     });
 
     return grouped;
   }, [matches]);
 
-  const currentMatchesData = matchesByDate[activeDateTab] || { pendientes: [], finalizados: [] };
+  // Obtener datos del tab activo
+  const currentMatchesData = matchesByDateAndStatus[activeDateTab] || { pendientes: [], finalizados: [] };
 
   // Calcular resultado global entre ambos clubes
   const globalScore = useMemo(() => {
@@ -220,11 +216,26 @@ export default function TournamentPage({ params }: TournamentPageProps) {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {products.length > 0 && (
-          <section className="mb-8 sm:mb-12">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
+        {/* Título del Torneo */}
+        {tournament && (
+          <div className="mb-4 sm:mb-6 text-center px-2">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">{tournament.name}</h2>
+          </div>
+        )}
+
+        {/* Tabs principales: Partidos y Productos Patrocinados - Centrados */}
+        <div className="mb-4 sm:mb-6">
+          <div className="flex justify-center gap-2 sm:gap-4 border-b border-gray-200">
+            <button
+              onClick={() => setActiveMainTab('partidos')}
+              className={`px-6 sm:px-8 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${
+                activeMainTab === 'partidos'
+                  ? 'border-black text-gray-900'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
               <svg
-                className="w-5 h-5 sm:w-6 sm:h-6"
+                className="w-4 h-4 sm:w-5 sm:h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -233,200 +244,221 @@ export default function TournamentPage({ params }: TournamentPageProps) {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                  d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
                 />
               </svg>
-              Productos Patrocinados
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Título del Torneo */}
-        {tournament && (
-          <div className="mb-6 sm:mb-8 text-center px-2">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{tournament.name}</h2>
-          </div>
-        )}
-
-        {/* Tabs de Fechas */}
-        {tournament && (
-          <div className="mb-4 sm:mb-6">
-            <div className="flex gap-2 sm:gap-4 border-b border-gray-200 overflow-x-auto scrollbar-hide">
+              Partidos
+            </button>
+            {products.length > 0 && (
               <button
-                onClick={() => setActiveDateTab('nov-9')}
-                className={`px-4 sm:px-6 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap text-sm sm:text-base ${
-                  activeDateTab === 'nov-9'
+                onClick={() => setActiveMainTab('productos')}
+                className={`px-6 sm:px-8 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${
+                  activeMainTab === 'productos'
                     ? 'border-black text-gray-900'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
-                Nov 9
+                <svg
+                  className="w-4 h-4 sm:w-5 sm:h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                  />
+                </svg>
+                Productos Patrocinados
               </button>
-              <button
-                onClick={() => setActiveDateTab('nov-10')}
-                className={`px-4 sm:px-6 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap text-sm sm:text-base ${
-                  activeDateTab === 'nov-10'
-                    ? 'border-black text-gray-900'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Nov 10
-              </button>
-            </div>
+            )}
           </div>
-        )}
+        </div>
 
-        {/* Resultado Global */}
-        {tournament && (
-          <section className="mb-8 sm:mb-12">
-            <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 lg:p-8 shadow-sm">
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">
-                Resultado Global
-              </h3>
-              
-              {/* Partidos Ganados */}
-              <div className="mb-6 sm:mb-8">
-                <h4 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 text-center">
-                  Partidos Ganados
-                </h4>
-                <div className="flex items-center justify-center gap-4 sm:gap-8">
-                  {/* Club 1 */}
-                  <div className="flex-1 text-center min-w-0">
-                    <div className="mb-3 sm:mb-4">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-2 sm:mb-3">
-                        <span className="text-2xl sm:text-3xl font-bold text-gray-900">
-                          {globalScore.partidos.club1}
-                        </span>
+        {/* Contenido según Tab Principal */}
+        {activeMainTab === 'partidos' ? (
+          <>
+            {/* Resultado Global - Optimizado para móvil */}
+            {tournament && (
+              <section className="mb-6 sm:mb-8">
+                <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-6 shadow-sm">
+                  <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-3 sm:mb-4 lg:mb-6 text-center">
+                    Resultado Global
+                  </h3>
+                  
+                  {/* Partidos Ganados */}
+                  <div className="mb-4 sm:mb-6">
+                    <h4 className="text-sm sm:text-base font-semibold text-gray-700 mb-2 sm:mb-3 text-center">
+                      Partidos Ganados
+                    </h4>
+                    <div className="flex items-center justify-center gap-3 sm:gap-6 lg:gap-8">
+                      {/* Club 1 */}
+                      <div className="flex-1 text-center min-w-0">
+                        <div className="mb-2 sm:mb-3">
+                          <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-1.5 sm:mb-2">
+                            <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+                              {globalScore.partidos.club1}
+                            </span>
+                          </div>
+                        </div>
+                        <h5 className="text-sm sm:text-base lg:text-lg font-bold text-gray-900 break-words px-1 leading-tight">{tournament.club1}</h5>
+                      </div>
+
+                      {/* VS Separator */}
+                      <div className="flex flex-col items-center flex-shrink-0">
+                        <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-400">VS</span>
+                      </div>
+
+                      {/* Club 2 */}
+                      <div className="flex-1 text-center min-w-0">
+                        <div className="mb-2 sm:mb-3">
+                          <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-1.5 sm:mb-2">
+                            <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+                              {globalScore.partidos.club2}
+                            </span>
+                          </div>
+                        </div>
+                        <h5 className="text-sm sm:text-base lg:text-lg font-bold text-gray-900 break-words px-1 leading-tight">{tournament.club2}</h5>
                       </div>
                     </div>
-                    <h5 className="text-base sm:text-lg font-bold text-gray-900 break-words px-1">{tournament.club1}</h5>
                   </div>
 
-                  {/* VS Separator */}
-                  <div className="flex flex-col items-center flex-shrink-0">
-                    <span className="text-2xl sm:text-3xl font-bold text-gray-400">VS</span>
-                  </div>
+                  {/* Sets Ganados */}
+                  <div className="border-t border-gray-200 pt-4 sm:pt-6">
+                    <h4 className="text-sm sm:text-base font-semibold text-gray-700 mb-2 sm:mb-3 text-center">
+                      Sets Ganados
+                    </h4>
+                    <div className="flex items-center justify-center gap-3 sm:gap-6 lg:gap-8">
+                      {/* Club 1 */}
+                      <div className="flex-1 text-center min-w-0">
+                        <div className="mb-2 sm:mb-3">
+                          <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-1.5 sm:mb-2">
+                            <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+                              {globalScore.sets.club1}
+                            </span>
+                          </div>
+                        </div>
+                        <h5 className="text-sm sm:text-base lg:text-lg font-bold text-gray-900 break-words px-1 leading-tight">{tournament.club1}</h5>
+                      </div>
 
-                  {/* Club 2 */}
-                  <div className="flex-1 text-center min-w-0">
-                    <div className="mb-3 sm:mb-4">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-2 sm:mb-3">
-                        <span className="text-2xl sm:text-3xl font-bold text-gray-900">
-                          {globalScore.partidos.club2}
-                        </span>
+                      {/* VS Separator */}
+                      <div className="flex flex-col items-center flex-shrink-0">
+                        <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-400">VS</span>
+                      </div>
+
+                      {/* Club 2 */}
+                      <div className="flex-1 text-center min-w-0">
+                        <div className="mb-2 sm:mb-3">
+                          <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-1.5 sm:mb-2">
+                            <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+                              {globalScore.sets.club2}
+                            </span>
+                          </div>
+                        </div>
+                        <h5 className="text-sm sm:text-base lg:text-lg font-bold text-gray-900 break-words px-1 leading-tight">{tournament.club2}</h5>
                       </div>
                     </div>
-                    <h5 className="text-base sm:text-lg font-bold text-gray-900 break-words px-1">{tournament.club2}</h5>
                   </div>
                 </div>
-              </div>
+              </section>
+            )}
 
-              {/* Sets Ganados */}
-              <div className="border-t border-gray-200 pt-6 sm:pt-8">
-                <h4 className="text-base sm:text-lg font-semibold text-gray-700 mb-3 sm:mb-4 text-center">
-                  Sets Ganados
-                </h4>
-                <div className="flex items-center justify-center gap-4 sm:gap-8">
-                  {/* Club 1 */}
-                  <div className="flex-1 text-center min-w-0">
-                    <div className="mb-3 sm:mb-4">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-2 sm:mb-3">
-                        <span className="text-2xl sm:text-3xl font-bold text-gray-900">
-                          {globalScore.sets.club1}
-                        </span>
-                      </div>
-                    </div>
-                    <h5 className="text-base sm:text-lg font-bold text-gray-900 break-words px-1">{tournament.club1}</h5>
-                  </div>
-
-                  {/* VS Separator */}
-                  <div className="flex flex-col items-center flex-shrink-0">
-                    <span className="text-2xl sm:text-3xl font-bold text-gray-400">VS</span>
-                  </div>
-
-                  {/* Club 2 */}
-                  <div className="flex-1 text-center min-w-0">
-                    <div className="mb-3 sm:mb-4">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-2 sm:mb-3">
-                        <span className="text-2xl sm:text-3xl font-bold text-gray-900">
-                          {globalScore.sets.club2}
-                        </span>
-                      </div>
-                    </div>
-                    <h5 className="text-base sm:text-lg font-bold text-gray-900 break-words px-1">{tournament.club2}</h5>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Contenido de Partidos según Tab */}
-        <section>
-          {/* Sub-tabs para Próximos Partidos y Partidos Finalizados */}
+            {/* Tabs de Fechas */}
+            {tournament && (
               <div className="mb-4 sm:mb-6">
-                <div className="flex gap-2 sm:gap-4 border-b border-gray-200 overflow-x-auto scrollbar-hide">
+                <div className="flex justify-center gap-2 sm:gap-4 border-b border-gray-200">
                   <button
-                    onClick={() => setActiveMatchTypeTab('proximos')}
-                    className={`px-4 sm:px-6 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${
-                      activeMatchTypeTab === 'proximos'
+                    onClick={() => {
+                      setActiveDateTab('Nov 9');
+                      setActiveMatchTypeTab('proximos');
+                    }}
+                    className={`px-4 sm:px-6 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap text-sm sm:text-base ${
+                      activeDateTab === 'Nov 9'
                         ? 'border-black text-gray-900'
                         : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
                   >
-                    <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span className="hidden xs:inline">Próximos Partidos</span>
-                    <span className="xs:hidden">Próximos</span>
+                    Nov 9
                   </button>
                   <button
-                    onClick={() => setActiveMatchTypeTab('finalizados')}
-                    className={`px-4 sm:px-6 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${
-                      activeMatchTypeTab === 'finalizados'
+                    onClick={() => {
+                      setActiveDateTab('Nov 10');
+                      setActiveMatchTypeTab('proximos');
+                    }}
+                    className={`px-4 sm:px-6 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap text-sm sm:text-base ${
+                      activeDateTab === 'Nov 10'
                         ? 'border-black text-gray-900'
                         : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
                   >
-                    <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span className="hidden xs:inline">Partidos Finalizados</span>
-                    <span className="xs:hidden">Finalizados</span>
+                    Nov 10
                   </button>
                 </div>
               </div>
+            )}
 
-              {/* Contenido según el tab activo */}
+            {/* Sub-tabs para Próximos Partidos y Partidos Finalizados */}
+            <div className="mb-4 sm:mb-6">
+              <div className="flex justify-center gap-2 sm:gap-4 border-b border-gray-200">
+                <button
+                  onClick={() => setActiveMatchTypeTab('proximos')}
+                  className={`px-4 sm:px-6 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${
+                    activeMatchTypeTab === 'proximos'
+                      ? 'border-black text-gray-900'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <svg
+                    className="w-4 h-4 sm:w-5 sm:h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span className="hidden xs:inline">Próximos Partidos</span>
+                  <span className="xs:hidden">Próximos</span>
+                </button>
+                <button
+                  onClick={() => setActiveMatchTypeTab('finalizados')}
+                  className={`px-4 sm:px-6 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${
+                    activeMatchTypeTab === 'finalizados'
+                      ? 'border-black text-gray-900'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <svg
+                    className="w-4 h-4 sm:w-5 sm:h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span className="hidden xs:inline">Partidos Finalizados</span>
+                  <span className="xs:hidden">Finalizados</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Contenido según el tab activo */}
+            <section>
               {activeMatchTypeTab === 'proximos' ? (
                 <div>
                   {currentMatchesData.pendientes.length > 0 ? (
-                    <div className="space-y-6">
+                    <div className="space-y-3 sm:space-y-4 lg:space-y-6">
                       {currentMatchesData.pendientes.map((match) => (
                         <MatchCard key={match.id} match={match} />
                       ))}
@@ -446,15 +478,15 @@ export default function TournamentPage({ params }: TournamentPageProps) {
                           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      <p className="text-gray-500 text-lg mb-2">No hay partidos pendientes para esta fecha.</p>
-                      <p className="text-gray-400 text-sm">Los partidos aparecerán aquí cuando se programen.</p>
+                      <p className="text-sm sm:text-base text-gray-500 mb-2">No hay partidos pendientes para esta fecha.</p>
+                      <p className="text-xs sm:text-sm text-gray-400">Los partidos aparecerán aquí cuando se programen.</p>
                     </div>
                   )}
                 </div>
               ) : (
                 <div>
                   {currentMatchesData.finalizados.length > 0 ? (
-                    <div className="space-y-6">
+                    <div className="space-y-3 sm:space-y-4 lg:space-y-6">
                       {currentMatchesData.finalizados.map((match) => (
                         <MatchCard key={match.id} match={match} />
                       ))}
@@ -474,13 +506,43 @@ export default function TournamentPage({ params }: TournamentPageProps) {
                           d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      <p className="text-gray-500 text-lg mb-2">No hay partidos finalizados para esta fecha aún.</p>
-                      <p className="text-gray-400 text-sm">Los resultados aparecerán aquí cuando se completen los partidos.</p>
+                      <p className="text-sm sm:text-base text-gray-500 mb-2">No hay partidos finalizados para esta fecha aún.</p>
+                      <p className="text-xs sm:text-sm text-gray-400">Los resultados aparecerán aquí cuando se completen los partidos.</p>
                     </div>
                   )}
                 </div>
               )}
-        </section>
+            </section>
+          </>
+        ) : (
+          /* Tab de Productos Patrocinados */
+          <section>
+            {products.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6">
+                {products.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                <svg
+                  className="w-16 h-16 mx-auto text-gray-400 mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                  />
+                </svg>
+                <p className="text-gray-500 text-lg mb-2">No hay productos patrocinados disponibles.</p>
+              </div>
+            )}
+          </section>
+        )}
       </main>
     </div>
   );

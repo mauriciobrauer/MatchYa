@@ -20,13 +20,13 @@ export default function ProductCard({ product }: ProductCardProps) {
           />
         </div>
       )}
-      <div className="p-4 flex-1 flex flex-col">
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">{product.name}</h3>
+      <div className="p-2 sm:p-3 lg:p-4 flex-1 flex flex-col">
+        <h3 className="text-xs sm:text-sm lg:text-base font-semibold text-gray-900 mb-1 line-clamp-2">{product.name}</h3>
         {product.price !== undefined && (
-          <p className="text-xl font-bold text-gray-900">$ {product.price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+          <p className="text-sm sm:text-base lg:text-lg font-bold text-gray-900">$ {product.price.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         )}
         {product.description && (
-          <p className="text-sm text-gray-600 mt-2">{product.description}</p>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2 hidden sm:block">{product.description}</p>
         )}
       </div>
     </div>

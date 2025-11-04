@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/Header';
+import PlayerAvatar from '@/components/PlayerAvatar';
 import { Match, Player } from '@/lib/db';
 import { Tournament } from '@/lib/db';
 
@@ -637,37 +638,28 @@ export default function AdminPage() {
             {tournaments.length === 0 ? (
               <p className="text-gray-500">No hay torneos registrados.</p>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {tournaments.map((tournament) => (
                   <div
                     key={tournament.id}
-                    className="bg-white border border-gray-200 rounded-lg p-6"
+                    className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">{tournament.name}</h3>
-                        <div className="text-lg text-gray-700 mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-1 break-words">{tournament.name}</h3>
+                        <div className="text-sm sm:text-base text-gray-700 mb-2">
                           {tournament.dates.join(' • ')}
                         </div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
-                            {tournament.club1}
-                          </span>
-                          <span className="text-gray-400 font-semibold">VS</span>
-                          <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
-                            {tournament.club2}
-                          </span>
-                        </div>
                         {tournament.description && (
-                          <p className="text-sm text-gray-600 mt-2">{tournament.description}</p>
+                          <p className="text-xs sm:text-sm text-gray-600 mt-2 line-clamp-2">{tournament.description}</p>
                         )}
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:flex-shrink-0">
                         <button
                           onClick={() => handleEditTournament(tournament)}
-                          className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-sm"
+                          className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors text-xs sm:text-sm whitespace-nowrap"
                         >
-                          Gestionar Torneo
+                          Gestionar
                         </button>
                         <button
                           onClick={() => {
@@ -681,13 +673,13 @@ export default function AdminPage() {
                             });
                             setShowTournamentModal(true);
                           }}
-                          className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm"
+                          className="flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-xs sm:text-sm whitespace-nowrap"
                         >
-                          Editar Info
+                          Editar
                         </button>
                         <button
                           onClick={() => handleDeleteTournament(tournament.id)}
-                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                          className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs sm:text-sm whitespace-nowrap"
                         >
                           Eliminar
                         </button>
@@ -705,53 +697,55 @@ export default function AdminPage() {
           <div>
             {/* Header con botón volver */}
             <div className="mb-6">
-              <button
-                onClick={handleBackToList}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2 mb-4"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
-                Volver a Torneos
-              </button>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{editingTournament.name}</h2>
-                  <p className="text-sm text-gray-600">{editingTournament.dates.join(' • ')}</p>
-                </div>
+              <div className="mb-4 sm:mb-6 space-y-3 sm:space-y-4">
                 <button
-                  onClick={() => {
-                    setTournamentFormData({
-                      name: editingTournament.name,
-                      dates: editingTournament.dates.length > 0 ? editingTournament.dates : [''],
-                      club1: editingTournament.club1,
-                      club2: editingTournament.club2,
-                      description: editingTournament.description || '',
-                    });
-                    setShowTournamentModal(true);
-                  }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  onClick={handleBackToList}
+                  className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center sm:justify-start gap-2 text-sm sm:text-base"
                 >
-                  Editar Información
+                  <svg
+                    className="w-4 h-4 sm:w-5 sm:h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                    />
+                  </svg>
+                  Volver a Torneos
                 </button>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 break-words leading-tight">{editingTournament.name}</h2>
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">{editingTournament.dates.join(' • ')}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setTournamentFormData({
+                        name: editingTournament.name,
+                        dates: editingTournament.dates.length > 0 ? editingTournament.dates : [''],
+                        club1: editingTournament.club1,
+                        club2: editingTournament.club2,
+                        description: editingTournament.description || '',
+                      });
+                      setShowTournamentModal(true);
+                    }}
+                    className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm sm:text-base whitespace-nowrap flex-shrink-0"
+                  >
+                    Editar Información
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Tabs dentro de la edición del torneo */}
-            <div className="flex gap-4 border-b border-gray-200 mb-6">
+            <div className="flex justify-center sm:justify-start gap-2 sm:gap-4 border-b border-gray-200 mb-4 sm:mb-6 overflow-x-auto scrollbar-hide">
               <button
                 onClick={() => setTournamentTab('jugadores')}
-                className={`px-6 py-3 border-b-2 transition-colors font-medium ${
+                className={`px-4 sm:px-6 py-2.5 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap text-sm sm:text-base ${
                   tournamentTab === 'jugadores'
                     ? 'border-black text-gray-900'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -761,7 +755,7 @@ export default function AdminPage() {
               </button>
               <button
                 onClick={() => setTournamentTab('partidos')}
-                className={`px-6 py-3 border-b-2 transition-colors font-medium ${
+                className={`px-4 sm:px-6 py-2.5 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap text-sm sm:text-base ${
                   tournamentTab === 'partidos'
                     ? 'border-black text-gray-900'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -774,49 +768,55 @@ export default function AdminPage() {
             {/* Tab Content: Jugadores */}
             {tournamentTab === 'jugadores' && (
               <div>
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-2xl font-semibold text-gray-900">Gestionar Jugadores</h3>
-                  <p className="text-sm text-gray-600">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
+                  <h3 className="text-xl sm:text-2xl font-semibold text-gray-900">Gestionar Jugadores</h3>
+                  <p className="text-xs sm:text-sm text-gray-600">
                     Los jugadores se agregan automáticamente al crear partidos
                   </p>
                 </div>
 
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6">
                   {filteredPlayers.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3 sm:space-y-4">
                       {filteredPlayers.map((player) => (
                         <div
                           key={player.id}
-                          className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
+                          className="bg-gray-50 border border-gray-200 rounded-lg p-4 sm:p-6"
                         >
-                          <div className="flex items-center gap-3 flex-1">
-                            {player.photoUrl && (
-                              <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0">
-                                <img
-                                  src={player.photoUrl}
-                                  alt={player.name}
-                                  className="w-full h-full object-cover"
-                                />
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              {player.photoUrl ? (
+                                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0">
+                                  <img
+                                    src={player.photoUrl}
+                                    alt={player.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="flex-shrink-0">
+                                  <PlayerAvatar name={player.name} size="sm" />
+                                </div>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">{player.name}</p>
+                                <p className="text-xs sm:text-sm text-gray-600">{player.club}</p>
                               </div>
-                            )}
-                            <div>
-                              <p className="font-semibold text-gray-900">{player.name}</p>
-                              <p className="text-sm text-gray-600">{player.club}</p>
                             </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => handleEditPlayer(player)}
-                              className="px-3 py-1 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                            >
-                              Editar
-                            </button>
-                            <button
-                              onClick={() => handleDeletePlayer(player)}
-                              className="px-3 py-1 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                            >
-                              Eliminar
-                            </button>
+                            <div className="flex flex-col sm:flex-row gap-2 sm:flex-shrink-0">
+                              <button
+                                onClick={() => handleEditPlayer(player)}
+                                className="w-full sm:w-auto px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-xs sm:text-sm whitespace-nowrap"
+                              >
+                                Editar
+                              </button>
+                              <button
+                                onClick={() => handleDeletePlayer(player)}
+                                className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs sm:text-sm whitespace-nowrap"
+                              >
+                                Eliminar
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -858,14 +858,14 @@ export default function AdminPage() {
                 ) : (
                   <div>
                     {/* Tabs de Fechas */}
-                    <div className="mb-6">
-                      <div className="flex gap-4 border-b border-gray-200 overflow-x-auto">
+                    <div className="mb-4 sm:mb-6">
+                      <div className="flex gap-2 sm:gap-4 border-b border-gray-200 overflow-x-auto scrollbar-hide">
                         <button
                           onClick={() => {
                             setActiveDateTab('nov-9');
                             setActiveMatchTypeTab('proximos');
                           }}
-                          className={`px-6 py-3 border-b-2 transition-colors font-medium whitespace-nowrap ${
+                          className={`px-4 sm:px-6 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap text-sm sm:text-base ${
                             activeDateTab === 'nov-9'
                               ? 'border-black text-gray-900'
                               : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -878,7 +878,7 @@ export default function AdminPage() {
                             setActiveDateTab('nov-10');
                             setActiveMatchTypeTab('proximos');
                           }}
-                          className={`px-6 py-3 border-b-2 transition-colors font-medium whitespace-nowrap ${
+                          className={`px-4 sm:px-6 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap text-sm sm:text-base ${
                             activeDateTab === 'nov-10'
                               ? 'border-black text-gray-900'
                               : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -892,18 +892,18 @@ export default function AdminPage() {
                     {/* Contenido según Tab de Fecha */}
                     <div>
                       {/* Sub-tabs para Próximos Partidos y Partidos Finalizados */}
-                      <div className="mb-6">
-                        <div className="flex gap-4 border-b border-gray-200 overflow-x-auto">
+                      <div className="mb-4 sm:mb-6">
+                        <div className="flex gap-2 sm:gap-4 border-b border-gray-200 overflow-x-auto scrollbar-hide">
                           <button
                             onClick={() => setActiveMatchTypeTab('proximos')}
-                            className={`px-6 py-3 border-b-2 transition-colors font-medium whitespace-nowrap flex items-center gap-2 ${
+                            className={`px-4 sm:px-6 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${
                               activeMatchTypeTab === 'proximos'
                                 ? 'border-black text-gray-900'
                                 : 'border-transparent text-gray-500 hover:text-gray-700'
                             }`}
                           >
                             <svg
-                              className="w-5 h-5"
+                              className="w-4 h-4 sm:w-5 sm:h-5"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -915,18 +915,19 @@ export default function AdminPage() {
                                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                               />
                             </svg>
-                            Próximos Partidos
+                            <span className="hidden xs:inline">Próximos Partidos</span>
+                            <span className="xs:hidden">Próximos</span>
                           </button>
                           <button
                             onClick={() => setActiveMatchTypeTab('finalizados')}
-                            className={`px-6 py-3 border-b-2 transition-colors font-medium whitespace-nowrap flex items-center gap-2 ${
+                            className={`px-4 sm:px-6 py-2 sm:py-3 border-b-2 transition-colors font-medium whitespace-nowrap flex items-center gap-1 sm:gap-2 text-sm sm:text-base ${
                               activeMatchTypeTab === 'finalizados'
                                 ? 'border-black text-gray-900'
                                 : 'border-transparent text-gray-500 hover:text-gray-700'
                             }`}
                           >
                             <svg
-                              className="w-5 h-5"
+                              className="w-4 h-4 sm:w-5 sm:h-5"
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
@@ -938,7 +939,8 @@ export default function AdminPage() {
                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                               />
                             </svg>
-                            Partidos Finalizados
+                            <span className="hidden xs:inline">Partidos Finalizados</span>
+                            <span className="xs:hidden">Finalizados</span>
                           </button>
                         </div>
                       </div>
@@ -947,43 +949,43 @@ export default function AdminPage() {
                       {activeMatchTypeTab === 'proximos' ? (
                         <div>
                           {currentAdminMatchesData.pendientes.length > 0 ? (
-                            <div className="space-y-4">
+                            <div className="space-y-3 sm:space-y-4">
                               {currentAdminMatchesData.pendientes.map((match) => (
                                 <div
                                   key={match.id}
-                                  className="bg-white border border-gray-200 rounded-lg p-6"
+                                  className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6"
                                 >
-                                  <div className="flex items-center justify-between mb-4">
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-4 mb-2">
-                                        <p className="font-semibold text-gray-900">
+                                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
+                                        <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">
                                           {match.player1.name} ({match.player1.club})
                                         </p>
-                                        <span className="text-gray-400">VS</span>
-                                        <p className="font-semibold text-gray-900">
+                                        <span className="text-gray-400 hidden sm:inline">VS</span>
+                                        <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">
                                           {match.player2.name} ({match.player2.club})
                                         </p>
                                       </div>
-                                      <p className="text-sm text-gray-600 mb-2">
+                                      <p className="text-xs sm:text-sm text-gray-600 mb-2">
                                         {match.time}
                                       </p>
-                                      <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                      <span className="inline-block px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
                                         Pendiente
                                       </span>
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-col sm:flex-row gap-2 sm:flex-shrink-0">
                                       <button
                                         onClick={() => {
                                           const matchWithFinalizado = { ...match, status: 'finalizado' as const };
                                           handleEdit(matchWithFinalizado);
                                         }}
-                                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                                        className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs sm:text-sm whitespace-nowrap"
                                       >
                                         Agregar Resultado
                                       </button>
                                       <button
                                         onClick={() => handleEdit(match)}
-                                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm"
+                                        className="w-full sm:w-auto px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-xs sm:text-sm whitespace-nowrap"
                                       >
                                         Editar
                                       </button>
@@ -1001,31 +1003,31 @@ export default function AdminPage() {
                       ) : (
                         <div>
                           {currentAdminMatchesData.finalizados.length > 0 ? (
-                            <div className="space-y-4">
+                            <div className="space-y-3 sm:space-y-4">
                               {currentAdminMatchesData.finalizados.map((match) => (
                                 <div
                                   key={match.id}
-                                  className="bg-white border border-gray-200 rounded-lg p-6"
+                                  className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6"
                                 >
-                                  <div className="flex items-center justify-between mb-4">
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-4 mb-2">
-                                        <p className="font-semibold text-gray-900">
+                                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-2">
+                                        <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">
                                           {match.player1.name} ({match.player1.club})
                                         </p>
-                                        <span className="text-gray-400">VS</span>
-                                        <p className="font-semibold text-gray-900">
+                                        <span className="text-gray-400 hidden sm:inline">VS</span>
+                                        <p className="font-semibold text-sm sm:text-base text-gray-900 break-words">
                                           {match.player2.name} ({match.player2.club})
                                         </p>
                                       </div>
-                                      <p className="text-sm text-gray-600 mb-2">
+                                      <p className="text-xs sm:text-sm text-gray-600 mb-2">
                                         {match.time}
                                       </p>
-                                      <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-black text-white">
+                                      <span className="inline-block px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-black text-white">
                                         Finalizado
                                       </span>
                                       {match.score1 !== undefined && match.score2 !== undefined && (
-                                        <div className="mt-3 flex items-center gap-4">
+                                        <div className="mt-3 flex items-center gap-2 sm:gap-4">
                                           <div className="flex items-center gap-2">
                                             <span className="text-lg font-bold text-gray-900">{match.score1}</span>
                                             <span className="text-gray-400">-</span>
@@ -1037,10 +1039,10 @@ export default function AdminPage() {
                                         </div>
                                       )}
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-2 sm:flex-shrink-0">
                                       <button
                                         onClick={() => handleEdit(match)}
-                                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-sm"
+                                        className="w-full sm:w-auto px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors text-xs sm:text-sm whitespace-nowrap"
                                       >
                                         Editar Resultado
                                       </button>

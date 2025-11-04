@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { Match } from '@/lib/db';
+import PlayerAvatar from './PlayerAvatar';
 
 interface MatchCardProps {
   match: Match;
@@ -26,11 +27,11 @@ export default function MatchCard({ match }: MatchCardProps) {
   const displayTime = convertTo12Hour(match.time);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 sm:p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2 text-gray-600">
+    <div className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-6 shadow-sm">
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <div className="flex items-center gap-1.5 sm:gap-2 text-gray-600">
           <svg
-            className="w-4 h-4 sm:w-5 sm:h-5"
+            className="w-3.5 h-3.5 sm:w-4 sm:h-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -42,10 +43,10 @@ export default function MatchCard({ match }: MatchCardProps) {
               d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <span className="text-lg sm:text-xl font-bold">{displayTime}</span>
+          <span className="text-base sm:text-lg lg:text-xl font-bold">{displayTime}</span>
         </div>
         <span
-          className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+          className={`px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap ${
             isFinished
               ? 'bg-black text-white'
               : 'bg-yellow-100 text-yellow-800'
@@ -56,24 +57,24 @@ export default function MatchCard({ match }: MatchCardProps) {
       </div>
 
       {match.photoUrl && (
-        <div className="mb-4 rounded-lg overflow-hidden">
+        <div className="mb-3 sm:mb-4 rounded-lg overflow-hidden">
           <Image
             src={match.photoUrl}
             alt={`Partido ${match.player1.name} vs ${match.player2.name}`}
             width={600}
             height={400}
-            className="w-full h-40 sm:h-48 object-cover"
+            className="w-full h-32 sm:h-40 lg:h-48 object-cover"
           />
         </div>
       )}
 
-      {/* Layout responsivo: vertical en móvil, horizontal en desktop */}
-      <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-4 sm:gap-0">
-        <div className={`w-full sm:flex-1 ${winner === 'player1' ? 'bg-green-50 rounded-lg p-3 sm:p-4 relative' : ''}`}>
+      {/* Layout optimizado para móvil */}
+      <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-3 sm:gap-0">
+        <div className={`w-full sm:flex-1 ${winner === 'player1' ? 'bg-green-50 rounded-lg p-2.5 sm:p-3 lg:p-4 relative' : ''}`}>
           {winner === 'player1' && (
-            <div className="absolute top-2 right-2">
+            <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2">
               <svg
-                className="w-5 h-5 sm:w-6 sm:h-6 text-green-600"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-green-600"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -83,7 +84,7 @@ export default function MatchCard({ match }: MatchCardProps) {
           )}
           <div className="flex flex-col items-center text-center">
             {match.player1.photoUrl ? (
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden mb-2 border-2 border-gray-200">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full overflow-hidden mb-1.5 sm:mb-2 border-2 border-gray-200">
                 <Image
                   src={match.player1.photoUrl}
                   alt={match.player1.name}
@@ -93,42 +94,30 @@ export default function MatchCard({ match }: MatchCardProps) {
                 />
               </div>
             ) : (
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-200 mb-2 flex items-center justify-center border-2 border-gray-300">
-                <svg
-                  className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
+              <div className="mb-1.5 sm:mb-2">
+                <PlayerAvatar name={match.player1.name} size="md" />
               </div>
             )}
-            <p className="font-bold text-base sm:text-lg text-gray-900 break-words px-2">{match.player1.name}</p>
-            <p className="text-xs sm:text-sm text-gray-600">{match.player1.club}</p>
-            <p className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">
+            <p className="font-bold text-sm sm:text-base lg:text-lg text-gray-900 break-words px-1 line-clamp-2">{match.player1.name}</p>
+            <p className="text-[10px] sm:text-xs text-gray-600 line-clamp-1">{match.player1.club}</p>
+            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mt-1.5 sm:mt-2">
               {isFinished && match.score1 !== undefined ? match.score1 : 0}
             </p>
           </div>
         </div>
 
-        <div className="py-2 sm:py-0 sm:px-4 flex flex-row sm:flex-col items-center gap-2 sm:gap-0">
-          <p className="text-gray-400 font-semibold text-base sm:text-lg">VS</p>
+        <div className="py-1.5 sm:py-0 sm:px-3 lg:px-4 flex flex-row sm:flex-col items-center gap-1.5 sm:gap-0">
+          <p className="text-gray-400 font-semibold text-sm sm:text-base lg:text-lg">VS</p>
           {match.sets && (
-            <p className="text-xs sm:text-sm text-gray-500 text-center">{match.sets}</p>
+            <p className="text-[10px] sm:text-xs text-gray-500 text-center">{match.sets}</p>
           )}
         </div>
 
-        <div className={`w-full sm:flex-1 ${winner === 'player2' ? 'bg-green-50 rounded-lg p-3 sm:p-4 relative' : ''}`}>
+        <div className={`w-full sm:flex-1 ${winner === 'player2' ? 'bg-green-50 rounded-lg p-2.5 sm:p-3 lg:p-4 relative' : ''}`}>
           {winner === 'player2' && (
-            <div className="absolute top-2 right-2">
+            <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2">
               <svg
-                className="w-5 h-5 sm:w-6 sm:h-6 text-green-600"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-green-600"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -138,7 +127,7 @@ export default function MatchCard({ match }: MatchCardProps) {
           )}
           <div className="flex flex-col items-center text-center">
             {match.player2.photoUrl ? (
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden mb-2 border-2 border-gray-200">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-full overflow-hidden mb-1.5 sm:mb-2 border-2 border-gray-200">
                 <Image
                   src={match.player2.photoUrl}
                   alt={match.player2.name}
@@ -148,25 +137,13 @@ export default function MatchCard({ match }: MatchCardProps) {
                 />
               </div>
             ) : (
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-200 mb-2 flex items-center justify-center border-2 border-gray-300">
-                <svg
-                  className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
+              <div className="mb-1.5 sm:mb-2">
+                <PlayerAvatar name={match.player2.name} size="md" />
               </div>
             )}
-            <p className="font-bold text-base sm:text-lg text-gray-900 break-words px-2">{match.player2.name}</p>
-            <p className="text-xs sm:text-sm text-gray-600">{match.player2.club}</p>
-            <p className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2">
+            <p className="font-bold text-sm sm:text-base lg:text-lg text-gray-900 break-words px-1 line-clamp-2">{match.player2.name}</p>
+            <p className="text-[10px] sm:text-xs text-gray-600 line-clamp-1">{match.player2.club}</p>
+            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mt-1.5 sm:mt-2">
               {isFinished && match.score2 !== undefined ? match.score2 : 0}
             </p>
           </div>
