@@ -2,6 +2,8 @@ import Header from '@/components/Header';
 import TournamentCard from '@/components/TournamentCard';
 import { getTournaments } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const tournaments = await getTournaments();
 

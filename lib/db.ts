@@ -40,10 +40,30 @@ export interface Product {
 }
 
 // Crear cliente de Turso
-const client = createClient({
-  url: process.env.TURSO_DATABASE_URL || '',
-  authToken: process.env.TURSO_AUTH_TOKEN || '',
-});
+// Inicializar cliente de Turso solo si las variables de entorno están disponibles
+const getClient = () => {
+  const url = process.env.TURSO_DATABASE_URL;
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+  
+  if (!url || !authToken) {
+    throw new Error('TURSO_DATABASE_URL and TURSO_AUTH_TOKEN must be set');
+  }
+  
+  return createClient({
+    url,
+    authToken,
+  });
+};
+
+// Crear cliente de forma lazy para evitar errores durante el build
+let client: ReturnType<typeof createClient> | null = null;
+
+const getTursoClient = () => {
+  if (!client) {
+    client = getClient();
+  }
+  return client;
+};
 
 // ===== TOURNAMENTS =====
 
@@ -58,7 +78,7 @@ export interface Tournament {
 
 export async function getTournaments(): Promise<Tournament[]> {
   try {
-    const result = await client.execute('SELECT * FROM tournaments ORDER BY name');
+    const result = await getTursoClient().execute('SELECT * FROM tournaments ORDER BY name');
     return result.rows.map((row: any) => ({
       id: row.id,
       name: row.name,
@@ -75,7 +95,7 @@ export async function getTournaments(): Promise<Tournament[]> {
 
 export async function getTournament(id: string): Promise<Tournament | null> {
   try {
-    const result = await client.execute({
+    const result = await getTursoClient().execute({
       sql: 'SELECT * FROM tournaments WHERE id = ?',
       args: [id],
     });
@@ -101,7 +121,7 @@ export async function createTournament(tournament: Omit<Tournament, 'id'>): Prom
   const id = Date.now().toString();
   const datesStr = Array.isArray(tournament.dates) ? tournament.dates.join(',') : tournament.dates || '';
   
-  await client.execute({
+  await getTursoClient().execute({
     sql: `INSERT INTO tournaments (id, name, dates, club1, club2, description) 
           VALUES (?, ?, ?, ?, ?, ?)`,
     args: [id, tournament.name, datesStr, tournament.club1, tournament.club2, tournament.description || null],
@@ -137,7 +157,7 @@ export async function updateTournament(id: string, tournament: Partial<Omit<Tour
   
   if (updates.length > 0) {
     args.push(id);
-    await client.execute({
+    await getTursoClient().execute({
       sql: `UPDATE tournaments SET ${updates.join(', ')} WHERE id = ?`,
       args,
     });
@@ -145,7 +165,7 @@ export async function updateTournament(id: string, tournament: Partial<Omit<Tour
 }
 
 export async function deleteTournament(id: string): Promise<void> {
-  await client.execute({
+  await getTursoClient().execute({
     sql: 'DELETE FROM tournaments WHERE id = ?',
     args: [id],
   });
@@ -165,7 +185,7 @@ export async function getMatches(tournamentId?: string): Promise<Match[]> {
     
     sql += ' ORDER BY date, time';
     
-    const result = await client.execute({ sql, args });
+    const result = await getTursoClient().execute({ sql, args });
     
     return result.rows.map((row: any) => ({
       id: row.id,
@@ -195,7 +215,7 @@ export async function getMatches(tournamentId?: string): Promise<Match[]> {
 
 export async function getMatch(id: string): Promise<Match | null> {
   try {
-    const result = await client.execute({
+    const result = await getTursoClient().execute({
       sql: 'SELECT * FROM matches WHERE id = ?',
       args: [id],
     });
@@ -233,7 +253,7 @@ export async function createMatch(match: Omit<Match, 'id'>): Promise<Match> {
   const id = Date.now().toString();
   const rawDate = match.rawDate || match.date;
   
-  await client.execute({
+  await getTursoClient().execute({
     sql: `INSERT INTO matches (
       id, date, raw_date, time, status, 
       player1_name, player1_club, player2_name, player2_club,
@@ -311,7 +331,7 @@ export async function updateMatch(id: string, match: Partial<Omit<Match, 'id'>>)
   
   if (updates.length > 0) {
     args.push(id);
-    await client.execute({
+    await getTursoClient().execute({
       sql: `UPDATE matches SET ${updates.join(', ')} WHERE id = ?`,
       args,
     });
@@ -319,7 +339,7 @@ export async function updateMatch(id: string, match: Partial<Omit<Match, 'id'>>)
 }
 
 export async function deleteMatch(id: string): Promise<void> {
-  await client.execute({
+  await getTursoClient().execute({
     sql: 'DELETE FROM matches WHERE id = ?',
     args: [id],
   });
@@ -339,7 +359,7 @@ export async function getPredictions(matchId?: string): Promise<Prediction[]> {
     
     sql += ' ORDER BY user_name';
     
-    const result = await client.execute({ sql, args });
+    const result = await getTursoClient().execute({ sql, args });
     
     return result.rows.map((row: any) => ({
       id: row.id,
@@ -357,7 +377,7 @@ export async function getPredictions(matchId?: string): Promise<Prediction[]> {
 export async function createPrediction(prediction: Omit<Prediction, 'id'>): Promise<Prediction> {
   const id = Date.now().toString();
   
-  await client.execute({
+  await getTursoClient().execute({
     sql: `INSERT INTO predictions (id, match_id, predicted_winner, user_name, is_correct)
           VALUES (?, ?, ?, ?, ?)`,
     args: [
@@ -375,7 +395,7 @@ export async function createPrediction(prediction: Omit<Prediction, 'id'>): Prom
 // Función para obtener el ranking de predicciones
 export async function getPredictionRanking(): Promise<Array<{ userName: string; correct: number; total: number; accuracy: number }>> {
   try {
-    const result = await client.execute(`
+    const result = await getTursoClient().execute(`
       SELECT 
         user_name,
         COUNT(*) as total,
@@ -407,7 +427,7 @@ export async function getPredictionRanking(): Promise<Array<{ userName: string; 
 
 export async function getProducts(): Promise<Product[]> {
   try {
-    const result = await client.execute('SELECT * FROM products ORDER BY name');
+    const result = await getTursoClient().execute('SELECT * FROM products ORDER BY name');
     
     return result.rows.map((row: any) => ({
       id: row.id,
@@ -426,7 +446,7 @@ export async function getProducts(): Promise<Product[]> {
 export async function createProduct(product: Omit<Product, 'id'>): Promise<Product> {
   const id = Date.now().toString();
   
-  await client.execute({
+  await getTursoClient().execute({
     sql: `INSERT INTO products (id, name, description, image_url, link, price)
           VALUES (?, ?, ?, ?, ?, ?)`,
     args: [
@@ -469,7 +489,7 @@ export async function updateProduct(id: string, product: Partial<Omit<Product, '
   
   if (updates.length > 0) {
     args.push(id);
-    await client.execute({
+    await getTursoClient().execute({
       sql: `UPDATE products SET ${updates.join(', ')} WHERE id = ?`,
       args,
     });
@@ -477,7 +497,7 @@ export async function updateProduct(id: string, product: Partial<Omit<Product, '
 }
 
 export async function deleteProduct(id: string): Promise<void> {
-  await client.execute({
+  await getTursoClient().execute({
     sql: 'DELETE FROM products WHERE id = ?',
     args: [id],
   });
