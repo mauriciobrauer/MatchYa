@@ -39,31 +39,29 @@ export interface Product {
   price?: number;
 }
 
-// Crear cliente de Turso
-// Inicializar cliente de Turso solo si las variables de entorno están disponibles
-const getClient = () => {
-  const url = process.env.TURSO_DATABASE_URL;
-  const authToken = process.env.TURSO_AUTH_TOKEN;
-  
-  if (!url || !authToken) {
-    throw new Error('TURSO_DATABASE_URL and TURSO_AUTH_TOKEN must be set');
-  }
-  
-  return createClient({
-    url,
-    authToken,
-  });
-};
+// Validar variables de entorno
+const tursoUrl = process.env.TURSO_DATABASE_URL;
+const tursoToken = process.env.TURSO_AUTH_TOKEN;
 
-// Crear cliente de forma lazy para evitar errores durante el build
-let client: ReturnType<typeof createClient> | null = null;
+if (!tursoUrl || !tursoToken) {
+  console.warn('⚠️ TURSO_DATABASE_URL o TURSO_AUTH_TOKEN no están configuradas');
+}
 
-const getTursoClient = () => {
+// Crear cliente de Turso solo si las variables están configuradas
+const client = tursoUrl && tursoToken
+  ? createClient({
+      url: tursoUrl,
+      authToken: tursoToken,
+    })
+  : null;
+
+// Helper para verificar que el cliente esté disponible
+function ensureClient() {
   if (!client) {
-    client = getClient();
+    throw new Error('Turso client not initialized. Please configure TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables.');
   }
   return client;
-};
+}
 
 // ===== TOURNAMENTS =====
 
@@ -77,8 +75,13 @@ export interface Tournament {
 }
 
 export async function getTournaments(): Promise<Tournament[]> {
+  if (!client) {
+    console.warn('Turso client not initialized');
+    return [];
+  }
   try {
-    const result = await getTursoClient().execute('SELECT * FROM tournaments ORDER BY name');
+    const db = ensureClient();
+    const result = await db.execute('SELECT * FROM tournaments ORDER BY name');
     return result.rows.map((row: any) => ({
       id: row.id,
       name: row.name,
@@ -94,8 +97,13 @@ export async function getTournaments(): Promise<Tournament[]> {
 }
 
 export async function getTournament(id: string): Promise<Tournament | null> {
+  if (!client) {
+    console.warn('Turso client not initialized');
+    return null;
+  }
   try {
-    const result = await getTursoClient().execute({
+    const db = ensureClient();
+    const result = await db.execute({
       sql: 'SELECT * FROM tournaments WHERE id = ?',
       args: [id],
     });
@@ -118,10 +126,11 @@ export async function getTournament(id: string): Promise<Tournament | null> {
 }
 
 export async function createTournament(tournament: Omit<Tournament, 'id'>): Promise<Tournament> {
+  const db = ensureClient();
   const id = Date.now().toString();
   const datesStr = Array.isArray(tournament.dates) ? tournament.dates.join(',') : tournament.dates || '';
   
-  await getTursoClient().execute({
+  await db.execute({
     sql: `INSERT INTO tournaments (id, name, dates, club1, club2, description) 
           VALUES (?, ?, ?, ?, ?, ?)`,
     args: [id, tournament.name, datesStr, tournament.club1, tournament.club2, tournament.description || null],
@@ -156,8 +165,9 @@ export async function updateTournament(id: string, tournament: Partial<Omit<Tour
   }
   
   if (updates.length > 0) {
+    const db = ensureClient();
     args.push(id);
-    await getTursoClient().execute({
+    await db.execute({
       sql: `UPDATE tournaments SET ${updates.join(', ')} WHERE id = ?`,
       args,
     });
@@ -165,7 +175,8 @@ export async function updateTournament(id: string, tournament: Partial<Omit<Tour
 }
 
 export async function deleteTournament(id: string): Promise<void> {
-  await getTursoClient().execute({
+  const db = ensureClient();
+  await db.execute({
     sql: 'DELETE FROM tournaments WHERE id = ?',
     args: [id],
   });
@@ -174,7 +185,12 @@ export async function deleteTournament(id: string): Promise<void> {
 // ===== MATCHES =====
 
 export async function getMatches(tournamentId?: string): Promise<Match[]> {
+  if (!client) {
+    console.warn('Turso client not initialized');
+    return [];
+  }
   try {
+    const db = ensureClient();
     let sql = 'SELECT * FROM matches';
     let args: any[] = [];
     
@@ -185,7 +201,7 @@ export async function getMatches(tournamentId?: string): Promise<Match[]> {
     
     sql += ' ORDER BY date, time';
     
-    const result = await getTursoClient().execute({ sql, args });
+    const result = await db.execute({ sql, args });
     
     return result.rows.map((row: any) => ({
       id: row.id,
@@ -214,8 +230,13 @@ export async function getMatches(tournamentId?: string): Promise<Match[]> {
 }
 
 export async function getMatch(id: string): Promise<Match | null> {
+  if (!client) {
+    console.warn('Turso client not initialized');
+    return null;
+  }
   try {
-    const result = await getTursoClient().execute({
+    const db = ensureClient();
+    const result = await db.execute({
       sql: 'SELECT * FROM matches WHERE id = ?',
       args: [id],
     });
@@ -250,10 +271,11 @@ export async function getMatch(id: string): Promise<Match | null> {
 }
 
 export async function createMatch(match: Omit<Match, 'id'>): Promise<Match> {
+  const db = ensureClient();
   const id = Date.now().toString();
   const rawDate = match.rawDate || match.date;
   
-  await getTursoClient().execute({
+  await db.execute({
     sql: `INSERT INTO matches (
       id, date, raw_date, time, status, 
       player1_name, player1_club, player2_name, player2_club,
@@ -281,6 +303,7 @@ export async function createMatch(match: Omit<Match, 'id'>): Promise<Match> {
 }
 
 export async function updateMatch(id: string, match: Partial<Omit<Match, 'id'>>): Promise<void> {
+  const db = ensureClient();
   const updates: string[] = [];
   const args: any[] = [];
   
@@ -331,7 +354,7 @@ export async function updateMatch(id: string, match: Partial<Omit<Match, 'id'>>)
   
   if (updates.length > 0) {
     args.push(id);
-    await getTursoClient().execute({
+    await db.execute({
       sql: `UPDATE matches SET ${updates.join(', ')} WHERE id = ?`,
       args,
     });
@@ -339,7 +362,8 @@ export async function updateMatch(id: string, match: Partial<Omit<Match, 'id'>>)
 }
 
 export async function deleteMatch(id: string): Promise<void> {
-  await getTursoClient().execute({
+  const db = ensureClient();
+  await db.execute({
     sql: 'DELETE FROM matches WHERE id = ?',
     args: [id],
   });
@@ -348,7 +372,12 @@ export async function deleteMatch(id: string): Promise<void> {
 // ===== PREDICTIONS =====
 
 export async function getPredictions(matchId?: string): Promise<Prediction[]> {
+  if (!client) {
+    console.warn('Turso client not initialized');
+    return [];
+  }
   try {
+    const db = ensureClient();
     let sql = 'SELECT * FROM predictions';
     let args: any[] = [];
     
@@ -359,7 +388,7 @@ export async function getPredictions(matchId?: string): Promise<Prediction[]> {
     
     sql += ' ORDER BY user_name';
     
-    const result = await getTursoClient().execute({ sql, args });
+    const result = await db.execute({ sql, args });
     
     return result.rows.map((row: any) => ({
       id: row.id,
@@ -375,9 +404,10 @@ export async function getPredictions(matchId?: string): Promise<Prediction[]> {
 }
 
 export async function createPrediction(prediction: Omit<Prediction, 'id'>): Promise<Prediction> {
+  const db = ensureClient();
   const id = Date.now().toString();
   
-  await getTursoClient().execute({
+  await db.execute({
     sql: `INSERT INTO predictions (id, match_id, predicted_winner, user_name, is_correct)
           VALUES (?, ?, ?, ?, ?)`,
     args: [
@@ -394,8 +424,13 @@ export async function createPrediction(prediction: Omit<Prediction, 'id'>): Prom
 
 // Función para obtener el ranking de predicciones
 export async function getPredictionRanking(): Promise<Array<{ userName: string; correct: number; total: number; accuracy: number }>> {
+  if (!client) {
+    console.warn('Turso client not initialized');
+    return [];
+  }
   try {
-    const result = await getTursoClient().execute(`
+    const db = ensureClient();
+    const result = await db.execute(`
       SELECT 
         user_name,
         COUNT(*) as total,
@@ -426,8 +461,13 @@ export async function getPredictionRanking(): Promise<Array<{ userName: string; 
 // ===== PRODUCTS =====
 
 export async function getProducts(): Promise<Product[]> {
+  if (!client) {
+    console.warn('Turso client not initialized');
+    return [];
+  }
   try {
-    const result = await getTursoClient().execute('SELECT * FROM products ORDER BY name');
+    const db = ensureClient();
+    const result = await db.execute('SELECT * FROM products ORDER BY name');
     
     return result.rows.map((row: any) => ({
       id: row.id,
@@ -444,9 +484,10 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 export async function createProduct(product: Omit<Product, 'id'>): Promise<Product> {
+  const db = ensureClient();
   const id = Date.now().toString();
   
-  await getTursoClient().execute({
+  await db.execute({
     sql: `INSERT INTO products (id, name, description, image_url, link, price)
           VALUES (?, ?, ?, ?, ?, ?)`,
     args: [
@@ -463,6 +504,7 @@ export async function createProduct(product: Omit<Product, 'id'>): Promise<Produ
 }
 
 export async function updateProduct(id: string, product: Partial<Omit<Product, 'id'>>): Promise<void> {
+  const db = ensureClient();
   const updates: string[] = [];
   const args: any[] = [];
   
@@ -489,7 +531,7 @@ export async function updateProduct(id: string, product: Partial<Omit<Product, '
   
   if (updates.length > 0) {
     args.push(id);
-    await getTursoClient().execute({
+    await db.execute({
       sql: `UPDATE products SET ${updates.join(', ')} WHERE id = ?`,
       args,
     });
@@ -497,7 +539,8 @@ export async function updateProduct(id: string, product: Partial<Omit<Product, '
 }
 
 export async function deleteProduct(id: string): Promise<void> {
-  await getTursoClient().execute({
+  const db = ensureClient();
+  await db.execute({
     sql: 'DELETE FROM products WHERE id = ?',
     args: [id],
   });
